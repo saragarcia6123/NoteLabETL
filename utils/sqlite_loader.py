@@ -9,7 +9,7 @@ class SQLite_Loader:
         config = json.load(config_file)
 
     FLASK_PORT = int(config['FLASK_PORT'])
-    BASE_URL = "http://localhost"
+    BASE_URL = f"http://{config['HOST']}"
     SERVER_URL = f"{BASE_URL}:{FLASK_PORT}"
 
     @staticmethod

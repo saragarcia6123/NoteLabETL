@@ -1,4 +1,4 @@
-import
+import re
 
 def querify_song(song):
     song = song.lower()

@@ -1,0 +1,15 @@
+streamlit
+streamlit_cookies_manager
+flask
+flask_restx
+dicttoxml
+numpy
+pandas
+matplotlib
+seaborn
+requests
+aiohttp
+beautifulsoup4
+spacy
+transformers
+torch

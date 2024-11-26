@@ -1,5 +1,6 @@
 import os
 import toml
+import fnmatch
 
 def get_project_metadata():
     try:
@@ -18,15 +19,37 @@ def get_project_metadata():
 
 project_name, project_version, project_description = get_project_metadata()
 
+def read_gitignore(startpath):
+    gitignore_path = os.path.join(startpath, '.gitignore')
+    ignored_patterns = []
+    if os.path.exists(gitignore_path):
+        with open(gitignore_path, 'r') as f:
+            ignored_patterns = f.read().splitlines()
+    return ignored_patterns
+
+def is_ignored(path, ignored_patterns):
+    for pattern in ignored_patterns:
+        if fnmatch.fnmatch(path, pattern):
+            return True
+    return False
+
 def generate_tree_structure(startpath):
     tree = ""
+    ignored_patterns = read_gitignore(startpath)
+
     for root, dirs, files in os.walk(startpath):
+        if is_ignored(root, ignored_patterns):
+            continue
+
         level = root.replace(startpath, '').count(os.sep)
         indent = ' ' * 4 * level
         tree += f"{indent}{os.path.basename(root)}/\n"
+
         subindent = ' ' * 4 * (level + 1)
         for f in files:
-            tree += f"{subindent}{f}\n"
+            file_path = os.path.join(root, f)
+            if not is_ignored(file_path, ignored_patterns):
+                tree += f"{subindent}{f}\n"
     return tree
 
 directory_structure = generate_tree_structure('src')
@@ -38,7 +61,9 @@ readme_content = f"""
 {project_description}
 
 ## The following is the directory structure of the project:
+```
 {directory_structure}
+```
 
 ## Installation
 

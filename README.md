@@ -6,8 +6,8 @@ NoteLab, WIP Streamlit+Flask project
 
 ## The following is the directory structure of the project:
 src/
-    config.json
     init.py
+    config.json
     database/
         database
     utils/
@@ -25,8 +25,16 @@ src/
         pages/
             API.py
             Tables.py
+        __pycache__/
+            config.cpython-312.pyc
     server/
         server.py
+        __pycache__/
+            server.cpython-312.pyc
+        templates/
+            index.html
+    __pycache__/
+        init.cpython-312.pyc
 
 
 ## Installation

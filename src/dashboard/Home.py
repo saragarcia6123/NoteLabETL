@@ -11,6 +11,8 @@ def main():
     SERVER_URL = cf['SERVER_URL']
 
     st.title("Home")
+    repo_url = 'https://github.com/saragarcia6123/NoteLabETL'
+    st.link_button('Link to GitHub Repository', repo_url)
 
 if __name__ == '__main__':
     main()

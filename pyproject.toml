@@ -1,0 +1,33 @@
+[project]
+name = "NoteLab"
+version = "0.1.0"
+description = "NoteLab, WIP Streamlit+Flask project"
+authors = [
+    { name = "Sara Garcia", email = "saragarcia6123@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.12, <3.13"
+license = { text = "MIT" }
+
+dependencies = [
+    "python-dotenv",
+    "streamlit",
+    "streamlit-cookies-manager",
+    "flask",
+    "flask-restx",
+    "dicttoxml",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "seaborn",
+    "requests",
+    "aiohttp",
+    "beautifulsoup4",
+    "spacy",
+    "transformers",
+    "torch",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -3,10 +3,14 @@ import threading
 import time
 import json
 import requests
-from app import app
 import sys
+from .server import server
+import os
 
-with open('config.json') as config_file:
+current_dir = os.path.dirname(__file__)
+config_path = os.path.join(current_dir, 'config.json')
+
+with open(config_path) as config_file:
     config = json.load(config_file)
 
 HOST = config['HOST']
@@ -18,10 +22,10 @@ FLASK_URL = f"http://{HOST}:{FLASK_PORT}"
 STREAMLIT_URL = f"http://{HOST}:{STREAMLIT_PORT}"
 
 def run_flask():
-    app.run(debug=True, port=5000, use_reloader=False)
+    server.app.run(debug=True, port=5000, use_reloader=False)
 
 def run_streamlit():
-    subprocess.run(["streamlit", "run", "dashboard/Home.py"])
+    subprocess.run(["streamlit", "run", "src/dashboard/Home.py"])
 
 def await_flask(url, timeout=10):
     start_time = time.time()
@@ -36,12 +40,6 @@ def await_flask(url, timeout=10):
     return False
 
 def main():
-    try:
-        subprocess.run([sys.executable, 'setup.py', 'install'], check=True)
-        print("setup.py executed successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error running setup.py: {e}")
-        return
 
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True

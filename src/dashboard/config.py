@@ -1,9 +1,14 @@
 import streamlit as st
 import json
+import os
 
 @st.cache_data
 def load():
-    with open('config.json') as config_file:
+
+    current_dir = os.path.dirname(__file__)
+    config_path = os.path.join(current_dir, '../config.json')
+
+    with open(config_path) as config_file:
         config = json.load(config_file)
 
     STREAMLIT_PORT = int(config['STREAMLIT_PORT'])

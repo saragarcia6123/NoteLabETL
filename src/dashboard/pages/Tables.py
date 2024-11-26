@@ -11,11 +11,7 @@ def main():
     SERVER_URL = cf['SERVER_URL']
 
     st.title("Tables")
-    params = {
-        'table_name': 'billboard_rankings',
-        'response_type': 'json'
-    }
-    response = requests.get(f"{SERVER_URL}/db/table", params=params)
+    response = requests.get(f"{SERVER_URL}/db/tables")
     if response.status_code == 200:
         data = response.json()
         df = pd.DataFrame(data)

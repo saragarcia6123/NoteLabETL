@@ -109,44 +109,41 @@ class GeniusAPI:
 
         return "Lyrics not found"
 
-"""Handles asynchronous requests to server and returns the response json"""
-async def _get_response(self, params, endpoint, session, retries, delay):
-    url = f"{self._BASE_URL}{endpoint}?{urlencode(params)}"
-    headers = self._get_headers()
+    """Handles asynchronous requests to server and returns the response json"""
+    async def _get_response(self, params, endpoint, session, retries, delay):
+        url = f"{self._BASE_URL}{endpoint}?{urlencode(params)}"
+        headers = self._get_headers()
 
-    data = None
-    attempts = 0
+        data = None
+        attempts = 0
 
-    while data is None and attempts < retries:
-        attempts += 1
-        async with session.get(url, headers=headers) as response:
-            if response.status in self._ERROR_MAP:
-                if response.status == 401 and not self._access_token:
-                    exception = self.MissingTokenError()
-                else:
-                    exception = self._ERROR_MAP[response.status]()
+        while data is None and attempts < retries:
+            attempts += 1
+            async with session.get(url, headers=headers) as response:
+                if response.status in self._ERROR_MAP:
+                    if response.status == 401 and not self._access_token:
+                        exception = self.MissingTokenError()
+                    else:
+                        exception = self._ERROR_MAP[response.status]()
 
-                # Retry logic for retriable exceptions
-                if isinstance(exception, tuple(self.retriable_exceptions)):
-                    await asyncio.sleep(delay)
-                    continue
+                    if isinstance(exception, tuple(self.retriable_exceptions)):
+                        await asyncio.sleep(delay)
+                        continue
 
-                # Raise non-retryable exceptions immediately
-                raise exception(f"Error {response.status}: {response.reason}")
+                    raise exception(f"Error {response.status}: {response.reason}")
 
-            if not response.ok:
-                raise self.RequestFailedError(response.status, f"Error {response.status}: {response.reason}")
+                if not response.ok:
+                    raise self.RequestFailedError(response.status, f"Error {response.status}: {response.reason}")
 
-            data = await response.json()
+                data = await response.json()
 
-    # Raise a timeout error if no data after retries
-    if data is None:
-        raise self.RequestFailedError(
-            status_code=504,
-            message="Request timed out after maximum retries."
-        )
+            if data is None:
+                raise self.RequestFailedError(
+                    status_code=504,
+                    message="Request timed out after maximum retries."
+                )
 
-    return data
+            return data
 
     _ERROR_MAP = {
         401: TokenExpiredOrInvalidError,
@@ -205,8 +202,7 @@ async def _get_response(self, params, endpoint, session, retries, delay):
     class ServiceUnavailableError(Exception):
         """Exception raised when the server is unavailable (503)."""
         def __init__(self, message="Service unavailable. Try again later."):
-            self.message = messageelse:  # Handle non-retryable errors
-
+            self.message = message
             super().__init__(self.message)
 
     class GatewayTimeoutError(Exception):

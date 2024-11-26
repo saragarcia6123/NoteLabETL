@@ -1,3 +1,64 @@
-secrets.json
+# Python
+*.pyc
+*.pyo
+__pycache__
+*.pyd
+*.so
+
+# Virtual environment
+venv/
+env/
+*.env
+
+# Conda environment
+*.conda
+*.h5
+*.tar
+
+# Jupyter Notebooks
 .ipynb_checkpoints/
-__pycache__/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Data Files
+*.csv
+*.sqlite
+*.sqlite3
+*.db
+*.dat
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Packaging
+*.egg
+*.tar.gz
+*.whl
+
+# Tests
+test_*/
+tests/__pycache__/
+tests/*.pyc
+
+# Project-specific configuration files
+config.json

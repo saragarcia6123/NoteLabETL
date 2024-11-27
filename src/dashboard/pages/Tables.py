@@ -16,6 +16,8 @@ def main():
         data = response.json()
         df = pd.DataFrame(data)
         st.dataframe(df)
+    elif response.status_code == 404:
+        st.write("No tables found")
     else:
         st.write("Failed to fetch data from Flask")
 

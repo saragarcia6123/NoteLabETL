@@ -4,6 +4,13 @@ import dicttoxml
 import sqlite3
 import json
 import os
+import logging
+
+logging.basicConfig(
+    filename='app.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 app = Flask(__name__)
 api = Api(app)
@@ -42,13 +49,21 @@ class DatabaseResource(Resource):
             db = sqlite3.connect(db_path)
             cur = db.cursor()
 
-            cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence';")
             tables = cur.fetchall()
 
-            db.close()
-            return jsonify({
-                "tables": [table[0] for table in tables]
-            }), 200
+            logging.info("Fetched tables: %s", tables)
+
+            if tables and len(tables) > 0:
+                response = {"tables": [table[0] for table in tables]}
+                status = 200
+            else:
+                response = {"tables": "N/A"}
+                status = 404
+
+            logging.info("Returning data: %s", response)
+
+            return response, status
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500

@@ -5,6 +5,7 @@ import sqlite3
 import json
 import os
 import logging
+import pandas as pd
 
 logging.basicConfig(
     filename='app.log',
@@ -41,7 +42,7 @@ def swagger_json():
 
 class TestResource(Resource):
     def get(self):
-        return jsonify({"message": "Working!"})
+        return {"message": "Working!"}, 200
 
 class DatabaseResource(Resource):
     def get(self):
@@ -49,24 +50,36 @@ class DatabaseResource(Resource):
             db = sqlite3.connect(db_path)
             cur = db.cursor()
 
+            cur.execute("VACUUM")
+
             cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence';")
             tables = cur.fetchall()
 
             logging.info("Fetched tables: %s", tables)
 
             if tables and len(tables) > 0:
-                response = {"tables": [table[0] for table in tables]}
-                status = 200
+                tables_data = {}
+
+                for table in tables:
+                    table_name = table[0]
+                    cur.execute(f"SELECT * FROM {table_name}")
+                    rows = cur.fetchall()
+                    columns = [description[0] for description in cur.description]
+
+                    tables_data[table_name] = {"columns": columns, "rows": rows}
+
+                response = {"tables": tables_data}
+                status_code = 200
             else:
-                response = {"tables": "N/A"}
-                status = 404
+                response = {"tables": {}}
+                status_code = 200
 
             logging.info("Returning data: %s", response)
 
-            return response, status
+            return response, status_code
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
         finally:
             db.close()
 
@@ -81,7 +94,7 @@ class TableResource(Resource):
             cur = db.cursor()
 
             if not self.table_exists(cur, table_name):
-                return jsonify({"error": f"Table '{table_name}' not found"}), 404
+                return {"error": f"Table '{table_name}' not found"}, 404
 
             cur.execute(f"SELECT * FROM {table_name}")
             rows = cur.fetchall()
@@ -90,22 +103,17 @@ class TableResource(Resource):
 
             result = [dict(zip(columns, row)) for row in rows]
 
-            response_type = request.args.get('response_type', 'html')
-
-            if response_type == 'json':
-                return jsonify(result)
-            elif response_type == 'text':
-                return '\n'.join(str(row) for row in result)
-            elif response_type == 'html':
-                return render_template('index.html', rows=rows)
-            elif response_type == 'xml':
-                xml_data = dicttoxml.dicttoxml(result)
-                return xml_data, 200, {'Content-Type': 'application/xml'}
+            if not result or len(result) == 0:
+                response = {"error": "No results"}
+                status_code = 404
             else:
-                return jsonify({"error": "Invalid response type"}), 400
+                response = result
+                status_code = 200
+
+            return result, status_code
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
         finally:
             db.close()
 
@@ -115,30 +123,30 @@ class TableResource(Resource):
             cur = db.cursor()
 
             data = request.get_json()
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
 
-            if self.table_exists(cur, table_name):
-                return jsonify({"error": f"Table '{table_name}' already exists"}), 404
+            if not data:
+                return {'error': 'No data provided'}, 400
 
             table_name = table_name.replace(' ', '_').lower()
 
-            columns = data[0].keys()
-            values = [list(record.values()) for record in data]
+            if self.table_exists(cur, table_name):
+                return {"error": f"Table '{table_name}' already exists"}, 404
 
-            column_definitions = ", ".join([f"{col.replace(' ', '_')} TEXT" for col in columns])
+            df = pd.DataFrame(data)
 
-            create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({column_definitions});"
+            try:
+                df.to_sql(table_name, db, if_exists='fail', index=False)
+                response = {'message': f'Table {table_name} created and data inserted successfully.'}
+                status_code = 200
+            except OperationalError as e:
+                response = {'error': f'Operational error: {str(e)}'}
+                status_code = 400
 
-            cur.execute(create_table_query)
-            insert_query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(['?'] * len(columns))})"
-            cur.executemany(insert_query, values)
-            db.commit()
-
-            return jsonify({'message': f'Table {table_name} created and data inserted successfully.'}), 200
+            return response, status_code
 
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return {'error': str(e)}, 500
+
         finally:
             db.close()
 
@@ -148,15 +156,16 @@ class TableResource(Resource):
             cur = db.cursor()
 
             if not self.table_exists(cur, table_name):
-                return jsonify({"error": f"Table '{table_name}' not found"}), 404
+                return {"error": f"Table '{table_name}' not found"}, 404
 
             cur.execute(f"DROP TABLE IF EXISTS {table_name}")
             db.commit()
 
-            return jsonify({"message": f"Table {table_name} dropped successfully!"}), 200
+            return {"message": f"Table {table_name} dropped successfully!"}, 200
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
+
         finally:
             db.close()
 
@@ -172,17 +181,18 @@ class TableSchemaResource(Resource):
             cur = db.cursor()
 
             if not self.table_exists(cur, table_name):
-                return jsonify({"error": f"Table '{table_name}' not found"}), 404
+                return {"error": f"Table '{table_name}' not found"}, 404
 
             cur.execute(f"PRAGMA table_info({table_name})")
             columns = cur.fetchall()
 
             schema = [{"column_name": col[1], "data_type": col[2]} for col in columns]
 
-            return jsonify({"table": table_name, "schema": schema})
+            return {"table": table_name, "schema": schema}, 200
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
+
         finally:
             db.close()
 
@@ -202,12 +212,12 @@ class RowResource(Resource):
 
             if row:
                 result = dict(zip(columns, row))
-                return jsonify(result), 200
+                return result, 200
             else:
-                return jsonify({"error": "Row not found"}), 404
+                return {"error": "Row not found"}, 404
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
 
         finally:
             db.close()
@@ -221,12 +231,12 @@ class RowResource(Resource):
             db.commit()
 
             if cur.rowcount == 0:
-                return jsonify({"error": "Row not found"}), 404
+                return {"error": "Row not found"}, 404
 
-            return jsonify({"message": f"Row with ID {row_id} deleted successfully!"}), 200
+            return {"message": f"Row with ID {row_id} deleted successfully!"}, 200
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
 
         finally:
             db.close()
@@ -239,7 +249,7 @@ class RowsResource(Resource):
 
             data = request.get_json()
             if not data:
-                return jsonify({"error": "No data provided"}), 400
+                return {"error": "No data provided"}, 400
 
             columns = list(data.keys())
             values = tuple(data.values())
@@ -251,10 +261,10 @@ class RowsResource(Resource):
             cur.execute(insert_query, values)
             db.commit()
 
-            return jsonify({"message": "Row added successfully"}), 201
+            return {"message": "Row added successfully"}, 200
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
 
         finally:
             db.close()
@@ -272,7 +282,7 @@ class RowsResource(Resource):
                 cur.execute(f"PRAGMA table_info({table_name})")
                 columns = [column[1] for column in cur.fetchall()]
                 result = [dict(zip(columns, row)) for row in rows]
-                return jsonify(result), 200
+                return result, 200
 
             where_clause = " AND ".join([f"{key} = ?" for key in query_params])
             values = tuple(query_params.values())
@@ -285,12 +295,12 @@ class RowsResource(Resource):
                 cur.execute(f"PRAGMA table_info({table_name})")
                 columns = [column[1] for column in cur.fetchall()]
                 result = [dict(zip(columns, row)) for row in rows]
-                return jsonify(result), 200
+                return result, 200
             else:
-                return jsonify({"error": "No rows found matching the query"}), 404
+                return {"error": "No rows found matching the query"}, 404
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
 
         finally:
             db.close()
@@ -314,12 +324,12 @@ class RowsResource(Resource):
             db.commit()
 
             if cur.rowcount == 0:
-                return jsonify({"error": "No rows matched the query"}), 404
+                return {"error": "No rows matched the query"}, 404
 
-            return jsonify({"message": "Rows deleted successfully!"}), 200
+            return {"message": "Rows deleted successfully!"}, 200
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
 
         finally:
             db.close()

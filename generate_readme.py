@@ -1,61 +1,60 @@
 import os
 import toml
-import fnmatch
+import pathspec
 
 def get_project_metadata():
     try:
         with open('pyproject.toml', 'r') as f:
             pyproject_data = toml.load(f)
 
-        project = pyproject_data.get('project', {})
+        project = pyproject_data.get('tool', {}).get('poetry', {})
         project_name = project.get('name', 'Unknown Project')
         project_version = project.get('version', '0.1.0')
         project_description = project.get('description', 'No description available')
+        project_authors = project.get('authors', [])
+        project_license = project.get('license', 'No license available')
 
-        return project_name, project_version, project_description
+        return project_name, project_version, project_description, ', '.join(project_authors), project_license
     except Exception as e:
         print(f"Error reading pyproject.toml: {e}")
-        return 'Unknown Project', '0.1.0', 'No description available'
+        return 'Unknown Project', '0.1.0', 'No description available', [], 'No license available'
 
-project_name, project_version, project_description = get_project_metadata()
-
-def read_gitignore(startpath):
-    gitignore_path = os.path.join(startpath, '.gitignore')
-    ignored_patterns = []
-    if os.path.exists(gitignore_path):
-        with open(gitignore_path, 'r') as f:
-            ignored_patterns = f.read().splitlines()
-    return ignored_patterns
-
-def is_ignored(path, ignored_patterns):
-    for pattern in ignored_patterns:
-        if fnmatch.fnmatch(path, pattern):
-            return True
-    return False
+project_name, project_version, project_description, project_authors, project_license = get_project_metadata()
 
 def generate_tree_structure(startpath):
     tree = ""
-    ignored_patterns = read_gitignore(startpath)
+
+    # Compile pathspec from .gitignore if it exists
+    gitignore_path = os.path.join(startpath, '.gitignore')
+    if os.path.exists(gitignore_path):
+        with open(gitignore_path, 'r') as f:
+            ignored_patterns = f.read().splitlines()
+        spec = pathspec.PathSpec.from_lines('gitwildmatch', ignored_patterns)
+    else:
+        spec = pathspec.PathSpec([])
 
     for root, dirs, files in os.walk(startpath):
-        if is_ignored(root, ignored_patterns):
-            continue
+        # Filter directories using pathspec
+        dirs[:] = [d for d in dirs if not spec.match_file(os.path.relpath(os.path.join(root, d), startpath))]
+
+        # Filter files using pathspec
+        files = [f for f in files if not spec.match_file(os.path.relpath(os.path.join(root, f), startpath))]
 
         level = root.replace(startpath, '').count(os.sep)
         indent = ' ' * 4 * level
         tree += f"{indent}{os.path.basename(root)}/\n"
-
         subindent = ' ' * 4 * (level + 1)
         for f in files:
-            file_path = os.path.join(root, f)
-            if not is_ignored(file_path, ignored_patterns):
-                tree += f"{subindent}{f}\n"
+            tree += f"{subindent}{f}\n"
+
     return tree
 
 directory_structure = generate_tree_structure('src')
 
 readme_content = f"""
 ## {project_name} - {project_version}
+## Authors: {project_authors}
+## License: {project_license}
 
 ## Description
 {project_description}
@@ -101,10 +100,6 @@ To run the app, use the following command:
     ```bash
     python -m src.init
     ```
-
-## License
-
-This project is licensed under the MIT License
 """
 
 # Save the README content to a file

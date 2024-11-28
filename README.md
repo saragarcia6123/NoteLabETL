@@ -1,8 +1,10 @@
 
-## Unknown Project - 0.1.0
+## NoteLab - 0.1.2
+## Authors: saragarcia6123 <saragarcia6123@gmail.com>
+## License: MIT
 
 ## Description
-No description available
+Work-in-progress SQLite + Flask + Streamlit Dashboard for Data analysis and API interaction
 
 ## The following is the directory structure of the project:
 ```
@@ -54,15 +56,16 @@ src/
 
     OR
 
-    Set up a Conda environment (recommended):
+    Set up a Conda environment:
     ```bash
-    conda create -n notelabenv python=3.12
+    conda create -n notelabenv
     conda activate notelabenv
     ```
 
 3. Install dependencies:
     ```bash
-    pip install -r requirements.txt
+    pip install poetry
+    poetry install
     ```
 
 ## Usage
@@ -71,7 +74,3 @@ To run the app, use the following command:
     ```bash
     python -m src.init
     ```
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

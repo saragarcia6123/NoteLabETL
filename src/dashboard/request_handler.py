@@ -17,6 +17,18 @@ def create_table(table_name, df):
     except requests.exceptions.RequestException as e:
         return f"Request failed: {str(e)}", 500
 
+def update_table(table_name, df):
+    data = df.to_dict(orient='records')
+    try:
+        response = requests.put(
+            f"{SERVER_URL}/db/{table_name}",
+            json=data
+        )
+        return response.json(), response.status_code
+
+    except requests.exceptions.RequestException as e:
+        return f"Request failed: {str(e)}", 500
+
 def delete_table(table_name):
     try:
         response = requests.delete(

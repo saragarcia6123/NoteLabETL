@@ -1,6 +1,7 @@
+from sqlite3 import OperationalError
+
 from flask import Flask, jsonify, request
 from flask_restx import Api, Resource
-import dicttoxml
 import sqlite3
 import json
 import os
@@ -165,6 +166,35 @@ class TableResource(Resource):
 
         except Exception as e:
             return {"error": str(e)}, 500
+
+        finally:
+            db.close()
+
+    def put(self, table_name):
+        try:
+            db = sqlite3.connect(db_path)
+            cur = db.cursor()
+
+            data = request.get_json()
+            table_name = table_name.replace(' ', '_').lower()
+
+            if not self.table_exists(cur, table_name):
+                return {"error": f"Table '{table_name}' not found"}, 404
+
+            df = pd.DataFrame(data)
+
+            try:
+                df.to_sql(table_name, db, if_exists='replace', index=False)
+                response = {'message': f'Table {table_name} updated successfully.'}
+                status_code = 200
+            except OperationalError as e:
+                response = {'error': f'Operational error: {str(e)}'}
+                status_code = 400
+
+            return response, status_code
+
+        except Exception as e:
+            return {'error': str(e)}, 500
 
         finally:
             db.close()

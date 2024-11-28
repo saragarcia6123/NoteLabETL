@@ -1,19 +1,19 @@
 import streamlit as st
-import pandas as pd
-import request_handler
-import message_handler
 import config
 
 PAGE_TITLE = 'Tables'
 st.set_page_config(page_title=config.PAGE_TITLE.format(PAGE_TITLE), page_icon=":material/music_note:", layout="wide", initial_sidebar_state="expanded")
 
+import pandas as pd
+import request_handler
+import message_handler
+
 def page_tables():
     st.title(PAGE_TITLE)
     message_handler.show_message()
-    show_tables()
 
-def show_tables():
     tables_data = request_handler.get_tables()
+
     if tables_data is None:
         st.error("Failed to fetch tables from server")
 

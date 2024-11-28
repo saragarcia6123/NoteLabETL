@@ -1,8 +1,8 @@
 
-## NoteLab - 0.1.1
+## Unknown Project - 0.1.0
 
 ## Description
-NoteLab, WIP Streamlit + Flask + SQLite Project
+No description available
 
 ## The following is the directory structure of the project:
 ```

@@ -83,15 +83,16 @@ readme_content = f"""
 
     OR
 
-    Set up a Conda environment (recommended):
+    Set up a Conda environment:
     ```bash
-    conda create -n notelabenv python=3.12
+    conda create -n notelabenv
     conda activate notelabenv
     ```
 
 3. Install dependencies:
     ```bash
-    pip install -r requirements.txt
+    pip install poetry
+    poetry install
     ```
 
 ## Usage
@@ -103,7 +104,7 @@ To run the app, use the following command:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License
 """
 
 # Save the README content to a file

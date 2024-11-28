@@ -1,12 +1,13 @@
-import message_handler
-import request_handler
 import streamlit as st
-import pandas as pd
 import config
-import os
 
 PAGE_TITLE = 'Create Table'
 st.set_page_config(page_title=config.PAGE_TITLE.format(PAGE_TITLE), page_icon=":material/music_note:", layout="wide", initial_sidebar_state="expanded")
+
+import message_handler
+import request_handler
+import pandas as pd
+import os
 
 def page_create_table():
     st.title(PAGE_TITLE)

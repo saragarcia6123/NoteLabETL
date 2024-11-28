@@ -2,6 +2,8 @@ import streamlit as st
 import json
 import os
 
+PAGE_TITLE = "NOTELAB | {}"
+
 @st.cache_data
 def load():
 

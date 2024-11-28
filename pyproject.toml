@@ -1,7 +1,7 @@
 [project]
 name = "NoteLab"
-version = "0.1.0"
-description = "NoteLab, WIP Streamlit+Flask project"
+version = "0.1.1"
+description = "NoteLab, WIP Streamlit + Flask + SQLite Project"
 authors = [
     { name = "Sara Garcia", email = "saragarcia6123@gmail.com" }
 ]

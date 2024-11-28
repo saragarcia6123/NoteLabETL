@@ -3,7 +3,6 @@ import threading
 import time
 import json
 import requests
-import sys
 from .server import server
 import os
 
@@ -22,12 +21,13 @@ FLASK_URL = f"http://{HOST}:{FLASK_PORT}"
 STREAMLIT_URL = f"http://{HOST}:{STREAMLIT_PORT}"
 
 def run_flask():
-    server.app.run(debug=True, port=5000, use_reloader=False)
+    server.app.run(debug=DEBUG, port=FLASK_PORT, use_reloader=False)
 
 def run_streamlit():
-    subprocess.run(["streamlit", "run", "src/dashboard/Home.py"])
+    process = subprocess.Popen(["streamlit", "run", "src/dashboard/streamlit_app.py"])
+    process.wait()
 
-def await_flask(url, timeout=10):
+def await_flask(url, timeout=20):
     start_time = time.time()
     while time.time() - start_time < timeout:
         try:

@@ -1,8 +1,8 @@
 
-## NoteLab - 0.1.0
+## NoteLab - 0.1.1
 
 ## Description
-NoteLab, WIP Streamlit+Flask project
+NoteLab, WIP Streamlit + Flask + SQLite Project
 
 ## The following is the directory structure of the project:
 ```
@@ -19,18 +19,20 @@ src/
             genius_api.py
             spotify_api.py
     dashboard/
-        Home.py
         config.py
         request_handler.py
-        .streamlit/
-            config.toml
-        pages/
-            API.py
-            Tables.py
+        streamlit_app.py
+        message_handler.py
+        Pages/
+            Table/
+                Tables.py
+                create.py
+                edit.py
+            Main/
+                API Documentation.py
+                Dashboard.py
     server/
         server.py
-        templates/
-            index.html
 
 ```
 

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 from flask_restx import Api, Resource
 import dicttoxml
 import sqlite3

@@ -1,17 +1,18 @@
 import requests
 import config
+import streamlit as st
 
 cf = config.load()
 SERVER_URL = cf['SERVER_URL']
 
-def create_table(table_name, data):
+def create_table(table_name, df):
+    data = df.to_dict(orient='records')
     try:
         response = requests.post(
             f"{SERVER_URL}/db/{table_name}",
             json=data
         )
-        response_data = response.json()
-        return response_data, response.status_code
+        return response.json(), response.status_code
 
     except requests.exceptions.RequestException as e:
         return f"Request failed: {str(e)}", 500
@@ -21,12 +22,10 @@ def delete_table(table_name):
         response = requests.delete(
             f"{SERVER_URL}/db/{table_name}"
         )
-        response_data = response.json()
-        return response_data, response.status_code
+        return response.json(), response.status_code
 
     except requests.exceptions.RequestException as e:
         return f"Request failed: {str(e)}", 500
-
 
 def get_tables():
     response = requests.get(f"{SERVER_URL}/db/tables")
@@ -38,4 +37,11 @@ def get_tables():
         else:
             return {}
     else:
-        return {}
+        return None
+
+def set_response(response, status_code):
+    if status_code == 200:
+        st.session_state.response_message = {"type": "success", "message": response}
+    else:
+        st.session_state.response_message = {"type": "error", "message": response}
+    st.rerun()

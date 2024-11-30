@@ -35,6 +35,8 @@ src/
                 Dashboard.py
     server/
         server.py
+        api/
+            sqlite_api.py
 
 ```
 

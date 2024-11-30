@@ -26,7 +26,7 @@ def upload_from_csv():
     if csv:
         if st.button('Upload'):
             df = pd.read_csv(csv)
-            response, status_code = request_handler.create_table(os.path.splitext(csv.name)[0], df)
+            response, status_code = request_handler.create_table_from_df(os.path.splitext(csv.name)[0], df)
             request_handler.set_response(response, status_code)
 
 def new_table():
@@ -49,7 +49,7 @@ def new_table():
     st.session_state.df = st.data_editor(st.session_state.df, num_rows='dynamic', use_container_width=True)
 
     if st.button('Create Table'):
-        response, status_code = request_handler.create_table(table_name, st.session_state.df)
+        response, status_code = request_handler.create_table_from_df(table_name, st.session_state.df)
         request_handler.set_response(response, status_code)
 
 page_create_table()

@@ -21,25 +21,25 @@ def get_project_metadata():
 
 project_name, project_version, project_description, project_authors, project_license = get_project_metadata()
 
+gitignore_path = os.path.join(os.curdir, '.gitignore')
+if os.path.exists(gitignore_path):
+    with open(gitignore_path, 'r') as f:
+        ignored_patterns = f.read().splitlines()
+    spec = pathspec.PathSpec.from_lines('gitwildmatch', ignored_patterns)
+else:
+    spec = pathspec.PathSpec([])
+
 def generate_tree_structure(startpath):
     tree = ""
 
-    # Compile pathspec from .gitignore if it exists
-    gitignore_path = os.path.join(startpath, '.gitignore')
-    if os.path.exists(gitignore_path):
-        with open(gitignore_path, 'r') as f:
-            ignored_patterns = f.read().splitlines()
-        spec = pathspec.PathSpec.from_lines('gitwildmatch', ignored_patterns)
-    else:
-        spec = pathspec.PathSpec([])
-
     for root, dirs, files in os.walk(startpath):
-        # Filter directories using pathspec
+        relative_root = os.path.relpath(root, startpath)
+        if spec.match_file(relative_root + '/'):
+            dirs[:] = []
+            continue
+
         dirs[:] = [d for d in dirs if not spec.match_file(os.path.relpath(os.path.join(root, d), startpath))]
-
-        # Filter files using pathspec
         files = [f for f in files if not spec.match_file(os.path.relpath(os.path.join(root, f), startpath))]
-
         level = root.replace(startpath, '').count(os.sep)
         indent = ' ' * 4 * level
         tree += f"{indent}{os.path.basename(root)}/\n"

@@ -31,7 +31,7 @@ def page_tables():
             st.dataframe(df)
 
             if st.button("Delete table", key=f"delete_{table_name}"):
-                response, status_code = request_handler.delete_table(table_name)
+                response, status_code = request_handler.drop_table(table_name)
                 request_handler.set_response(response, status_code)
 
 page_tables()

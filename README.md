@@ -50,7 +50,7 @@ src/
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/NoteLabETL.git
+    git clone https://github.com/saragarcia6123/NoteLab.git
     cd NoteLab
     ```
 

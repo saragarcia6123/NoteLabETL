@@ -1,4 +1,10 @@
+"""
+This class is responsible for the streamlit app
+"""
+
 import streamlit as st
+
+st.set_page_config(page_title="NoteLab", page_icon=":material/music_note:", layout="wide", initial_sidebar_state="expanded")
 
 pages = {
         "Main": [

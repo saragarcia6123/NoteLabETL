@@ -1,16 +1,13 @@
 import streamlit as st
-import config
-
-PAGE_TITLE = 'API Documentation'
-st.set_page_config(page_title=config.PAGE_TITLE.format(PAGE_TITLE), page_icon=":material/music_note:", layout="wide", initial_sidebar_state="expanded")
+from src import app_config
 
 def page_server_api_documentation():
-    st.title(PAGE_TITLE)
+    st.title('API Documentation')
 
-    cf = config.load()
-    SERVER_URL = cf['SERVER_URL']
+    cf = app_config.load()
+    server_url = cf['flask_url']
     swagger_ui_html = f"""
-    <iframe src="{SERVER_URL}" width="100%" height="600px" frameborder="0"></iframe>
+    <iframe src="{server_url}" width="100%" height="600px" frameborder="0"></iframe>
     """
 
     st.components.v1.html(swagger_ui_html, height=600)

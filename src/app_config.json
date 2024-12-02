@@ -1,0 +1,17 @@
+{
+    "host": "127.0.0.1",
+    "flask_port": "5000",
+    "streamlit_port": "8501",
+    "debug": "True",
+    "use_reloader": "True",
+    "endpoints": {
+        "sqlite": {
+          "root": "/db",
+          "table": "/<string:table_name>",
+          "table_schema": "/<string:table_name>/schema",
+          "tables": "/tables",
+          "row": "/<string:table_name>/<int:row_id>",
+          "rows": "/<string:table_name>/rows"
+        }
+    }
+}

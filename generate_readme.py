@@ -69,40 +69,20 @@ readme_content = f"""
 1. Clone the repository:
     ```bash
     git clone https://github.com/yourusername/NoteLabETL.git
-    cd NoteLabETL
+    cd NoteLab
     ```
 
-2. Set up environment (optional, recommended):
+2. **Run the setup script:**
+   ```sh
+   ./setup_env.sh
+   ```
 
-    Set up a virtual environment:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows, use `venv\\Scripts\\activate`
-    ```
-
-    OR
-
-    Set up a Conda environment:
-    ```bash
-    conda create -n notelabenv
-    conda activate notelabenv
-    ```
-
-3. Install dependencies:
-    ```bash
-    pip install poetry
-    poetry install
-    ```
-
-## Usage
-
-To run the app, use the following command:
-    ```bash
-    python -m src.init
-    ```
+3. **Run the application:**
+   ```sh
+   python src/main.py
+   ```
 """
 
-# Save the README content to a file
 with open("README.md", "w") as f:
     f.write(readme_content)
 

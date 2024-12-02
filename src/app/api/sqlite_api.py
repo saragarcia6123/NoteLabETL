@@ -1,3 +1,7 @@
+"""
+This class is responsible for formulating and executing SQL queries to the SQLite Database
+"""
+
 import sqlite3
 import logging
 import os
@@ -61,7 +65,7 @@ class SQLiteAPI:
         "ROWS_INSERTION_SUCCESS": "Row(s) inserted into table '{table_name}'.",
         "ROWS_INSERTION_FAIL": "Failed to insert row(s) into table '{table_name}'.",
 
-        "ROWS_UPDATED": "Row(s) updated in table '{table_name}'.",
+        "ROWS_UPDATE_SUCCESS": "Row(s) updated in table '{table_name}'.",
         "ROWS_UPDATE_FAIL": "Failed to update row(s) in table '{table_name}'.",
 
         "ROWS_DELETED": "Row(s) deleted from table '{table_name}'.",
@@ -249,7 +253,7 @@ class SQLiteAPI:
         - Message (str)
         - HTTP Status Code (int)
     """
-    def create_table(self, table_name: str, columns:Optional[List[str]]=None, force_create:bool=False) -> Tuple[str, int]:
+    def create_table(self, table_name: str, columns:List[str], force_create:bool=False) -> Tuple[str, int]:
         try:
             if not self.connected:
                 message = self.MESSAGES["NOT_CONNECTED"]
@@ -265,7 +269,7 @@ class SQLiteAPI:
                     self.drop_table(table_name)
                     self.logger.info(f"Table {table_name} deleted.")
 
-            if not columns:
+            if len(columns) == 0:
                 message = "No columns provided for table creation."
                 self.logger.error(message)
                 return message, 400
@@ -512,6 +516,66 @@ class SQLiteAPI:
 
         except Exception as e:
             message = f"{self.MESSAGES['ROWS_DELETION_FAILED'].format(table_name=table_name)} {str(e)}"
+            self.logger.error(message)
+            return message, 500
+
+    """
+    Update multiple rows in a table in SQLite Database
+    Parameters:
+        - table_name (str) - The name of the table to update rows in
+        - rows (List[List[str]]) - A list of tuples, each containing the unique identifier followed by the column data
+    Returns:
+        Response message (str)
+        HTTP Status Code (int)
+    """
+
+    def update_rows(self, table_name: str, rows: List[List[str]]) -> Tuple[str, int]:
+        try:
+            if not self.connected:
+                message = self.MESSAGES["NOT_CONNECTED"]
+                self.logger.info(message)
+                return message, 400
+
+            if not self._table_exists(table_name):
+                message = self.MESSAGES["TABLE_NOT_FOUND"].format(table_name=table_name)
+                self.logger.warning(message)
+                return message, 404
+
+            self.cursor.execute(f"PRAGMA table_info({table_name})")
+            columns_info = self.cursor.fetchall()
+            column_names = [info[1] for info in columns_info]
+
+            if len(column_names) < 2:
+                message = "Table must have at least a unique identifier and one field to update."
+                self.logger.warning(message)
+                return message, 400
+
+            identifier_col = column_names[0]
+            update_columns = column_names[1:]
+
+            set_clause = ', '.join([f"{column} = ?" for column in update_columns])
+            update_query_template = f"UPDATE {table_name} SET {set_clause} WHERE {identifier_col} = ?"
+
+            with self.db:
+                for row in rows:
+                    if len(row) != len(column_names):
+                        message = f"Row length {len(row)} does not match table column count {len(column_names)}"
+                        self.logger.error(message)
+                        continue
+
+                    unique_id = row[0]
+                    values = row[1:]
+
+                    self.cursor.execute(update_query_template, values + [unique_id])
+
+            self.db.commit()
+            message = self.MESSAGES["ROWS_UPDATE_SUCCESS"].format(table_name=table_name)
+            self.logger.info(message)
+
+            return message, 200
+
+        except Exception as e:
+            message = self.MESSAGES["ROWS_UPDATE_FAIL"].format(table_name=table_name) + f" {str(e)}"
             self.logger.error(message)
             return message, 500
 

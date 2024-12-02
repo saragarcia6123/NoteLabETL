@@ -1,55 +1,64 @@
 import streamlit as st
-import config
-
-PAGE_TITLE = 'Create Table'
-st.set_page_config(page_title=config.PAGE_TITLE.format(PAGE_TITLE), page_icon=":material/music_note:", layout="wide", initial_sidebar_state="expanded")
-
-import message_handler
-import request_handler
+import app_config
+from app.utils import request_handler
+from dashboard import message_handler
+from utils import pandas_to_sql
 import pandas as pd
 import os
 
-def page_create_table():
-    st.title(PAGE_TITLE)
-    message_handler.show_message()
+config = app_config.load()
+endpoint_template = config['endpoints']['sqlite']['table']
 
-    options = ["Empty Table", "Upload from .csv"]
+def page_create_table():
+    st.title('New Table')
+    message_handler.show_messages()
+
+    options = ["Upload from .csv", "Empty Table"]
     option = st.radio("Select an option", options)
 
     if option == options[0]:
-        new_table()
-    elif option == options[1]:
         upload_from_csv()
+    elif option == options[1]:
+        new_table()
 
 def upload_from_csv():
     csv = st.file_uploader('Upload from .csv', type=['csv'])
     if csv:
         if st.button('Upload'):
             df = pd.read_csv(csv)
-            response, status_code = request_handler.create_table_from_df(os.path.splitext(csv.name)[0], df)
-            request_handler.set_response(response, status_code)
+            table_name = os.path.splitext(csv.name)[0]
+            columns = pandas_to_sql.columns_from_df(table_name, df)
+            rows = pandas_to_sql.rows_from_df(df)
+
+            response, status_code = request_handler.create_table(table_name, columns)
+            message_handler.add_response(response, status_code)
+
+            response, status_code = request_handler.insert_rows(table_name, rows)
+            message_handler.add_response(response, status_code)
+
+            st.rerun()
+
 
 def new_table():
+    st.title('This section is WIP')
 
-    table_name = st.text_input('Table Name')
+    table_name = st.text_input('Table Name:')
 
     if 'df' not in st.session_state:
-        st.session_state.df = pd.DataFrame()
+        st.session_state.df = pd.DataFrame(columns=['Column 1'])
 
-    if st.button('New Column'):
-        new_col_name = f"column_{len(st.session_state.df.columns) + 1}"
-        st.session_state.df[new_col_name] = ""
-
-    for i, col in enumerate(st.session_state.df.columns):
-        if col != 'index':
-            new_col_name = st.text_input(f"Rename column '{col}'", value=col, key=f"col_{i}")
-            if new_col_name != col:
-                st.session_state.df = st.session_state.df.rename(columns={col: new_col_name})
-
-    st.session_state.df = st.data_editor(st.session_state.df, num_rows='dynamic', use_container_width=True)
+    st.session_state.df = st.data_editor(st.session_state.df, num_rows="dynamic")
 
     if st.button('Create Table'):
-        response, status_code = request_handler.create_table_from_df(table_name, st.session_state.df)
-        request_handler.set_response(response, status_code)
+        columns = pandas_to_sql.columns_from_df(table_name, st.session_state.df)
+        rows = pandas_to_sql.rows_from_df(st.session_state.df)
+
+        response, status_code = request_handler.create_table(table_name, columns)
+        message_handler.add_response(response, status_code)
+
+        response, status_code = request_handler.insert_rows(table_name, rows)
+        message_handler.add_response(response, status_code)
+
+        st.rerun()
 
 page_create_table()

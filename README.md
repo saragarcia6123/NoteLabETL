@@ -1,5 +1,5 @@
 
-## NoteLab - 0.1.2
+## NoteLab - 0.1.3
 ## Authors: saragarcia6123 <saragarcia6123@gmail.com>
 ## License: MIT
 
@@ -9,20 +9,28 @@ Work-in-progress SQLite + Flask + Streamlit Dashboard for Data analysis and API 
 ## The following is the directory structure of the project:
 ```
 src/
-    init.py
-    config.json
-    database/
-        database
+    app_config.py
+    app_config.json
+    main.py
+    __init__.py
     utils/
-        classifier.py
-        querify.py
-        sqlite_loader.py
+        pandas_to_sql.py
+        song_querifier.py
+    app/
+        main.py
+        __init__.py
         api/
             genius_api.py
             spotify_api.py
+            sqlite_api.py
+        routes/
+            sqlite.py
+            swagger.py
+        utils/
+            async_request_handler.py
+            request_handler.py
+            http_errors.py
     dashboard/
-        config.py
-        request_handler.py
         streamlit_app.py
         message_handler.py
         Pages/
@@ -33,10 +41,8 @@ src/
             Main/
                 API Documentation.py
                 Dashboard.py
-    server/
-        server.py
-        api/
-            sqlite_api.py
+    database/
+        database
 
 ```
 
@@ -45,34 +51,15 @@ src/
 1. Clone the repository:
     ```bash
     git clone https://github.com/yourusername/NoteLabETL.git
-    cd NoteLabETL
+    cd NoteLab
     ```
 
-2. Set up environment (optional, recommended):
+2. **Run the setup script:**
+   ```sh
+   ./setup_env.sh
+   ```
 
-    Set up a virtual environment:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-    ```
-
-    OR
-
-    Set up a Conda environment:
-    ```bash
-    conda create -n notelabenv
-    conda activate notelabenv
-    ```
-
-3. Install dependencies:
-    ```bash
-    pip install poetry
-    poetry install
-    ```
-
-## Usage
-
-To run the app, use the following command:
-    ```bash
-    python -m src.init
-    ```
+3. **Run the application:**
+   ```sh
+   python src/main.py
+   ```
